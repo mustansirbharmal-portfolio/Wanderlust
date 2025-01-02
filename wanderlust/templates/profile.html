@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Profile{% endblock %}
+
+{% block content %}
+<div class="profile-container fade-in">
+    <div class="profile-header">
+        <div class="profile-info">
+            <h1>{{ current_user.username }}'s Profile</h1>
+            <p class="user-level">Level: {{ user_level }}</p>
+            <p class="user-points">Points: <span id="user-points">{{ current_user.points }}</span></p>
+        </div>
+        <div class="profile-actions">
+            <a href="{{ url_for('main.settings') }}" class="btn btn-primary">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="profile-content">
+        <div class="achievements-section">
+            <h2>Achievements</h2>
+            <div class="achievements-grid">
+                {% for achievement in achievements %}
+                <div class="achievement-card">
+                    <div class="achievement-icon">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="achievement-info">
+                        <h3>{{ achievement.title }}</h3>
+                        <p>{{ achievement.description }}</p>
+                        <span class="points-value">+{{ achievement.points_value }} points</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-data">Complete activities to earn achievements!</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="activities-section">
+            <h2>Recent Activities</h2>
+            <div class="activities-list">
+                {% for activity in activities %}
+                <div class="activity-card {% if activity.completed %}completed{% endif %}">
+                    <div class="activity-header">
+                        <h3>{{ activity.title }}</h3>
+                        <span class="activity-date">{{ activity.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    <p class="activity-description">{{ activity.description }}</p>
+                    <div class="activity-footer">
+                        <span class="activity-category">{{ activity.category }}</span>
+                        <span class="activity-difficulty {{ activity.difficulty.lower() }}">{{ activity.difficulty }}</span>
+                        {% if activity.completed %}
+                        <span class="activity-status completed">
+                            <i class="fas fa-check-circle"></i> Completed
+                        </span>
+                        {% else %}
+                        <span class="activity-status pending">
+                            <i class="fas fa-clock"></i> Pending
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <p class="no-data">No activities yet. Start exploring!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.profile-info h1 {
+    margin: 0;
+    color: #333;
+}
+
+.user-level, .user-points {
+    margin: 0.5rem 0;
+    color: #666;
+}
+
+.profile-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.achievements-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.achievement-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.achievement-icon {
+    width: 50px;
+    height: 50px;
+    background: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffd700;
+    font-size: 1.5rem;
+}
+
+.achievement-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.achievement-info p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.points-value {
+    font-size: 0.9rem;
+    color: #28a745;
+    font-weight: 500;
+}
+
+.activities-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.activity-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.activity-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #333;
+}
+
+.activity-date {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.activity-description {
+    margin: 0.5rem 0;
+    color: #555;
+}
+
+.activity-footer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.activity-category,
+.activity-difficulty,
+.activity-status {
+    font-size: 0.9rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    background: #f8f9fa;
+}
+
+.activity-difficulty.easy { color: #28a745; }
+.activity-difficulty.medium { color: #ffc107; }
+.activity-difficulty.hard { color: #dc3545; }
+
+.activity-status.completed {
+    color: #28a745;
+}
+
+.activity-status.pending {
+    color: #ffc107;
+}
+
+.no-data {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .profile-content {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

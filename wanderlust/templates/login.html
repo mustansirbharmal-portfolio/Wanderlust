@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Login{% endblock %}
+
+{% block content %}
+<div class="auth-container fade-in">
+    <div class="card auth-card">
+        <h1>Welcome Back</h1>
+        <p>Login to continue your adventures</p>
+
+        <form method="POST" action="{{ url_for('main.login') }}" class="auth-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="form-group remember-me">
+                <input type="checkbox" id="remember" name="remember">
+                <label for="remember">Remember me</label>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Login</button>
+        </form>
+
+        <div class="auth-links">
+            <a href="{{ url_for('main.register') }}">Don't have an account? Register</a>
+            <a href="{{ url_for('main.forgot_password') }}">Forgot Password?</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

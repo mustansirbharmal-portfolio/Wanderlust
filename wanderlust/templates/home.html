@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Home{% endblock %}
+
+{% block content %}
+<div class="home-container fade-in">
+    <div class="generate-section">
+        <h1>Generate Your Next Adventure</h1>
+        <p>Choose your preferences and let's create something exciting!</p>
+
+        <div class="generate-form">
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" class="form-control">
+                    <option value="food">Food</option>
+                    <option value="culture">Culture</option>
+                    <option value="adventure">Adventure</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="difficulty">Difficulty</label>
+                <select id="difficulty" class="form-control">
+                    <option value="easy">Easy (30-60 minutes)</option>
+                    <option value="medium">Medium (1-2 hours)</option>
+                    <option value="hard">Hard (2-3 hours)</option>
+                </select>
+            </div>
+
+            <button id="generateBtn" class="btn btn-primary">
+                <span class="btn-text">Generate Adventure</span>
+                <div class="spinner-border spinner-border-sm d-none" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <div id="activityResult" class="activity-result d-none">
+        <div class="card activity-card">
+            <div class="activity-header">
+                <h2 id="activityTitle"></h2>
+                <span id="activityCategory" class="badge"></span>
+                <span id="activityDifficulty" class="badge"></span>
+            </div>
+
+            <div class="activity-details">
+                <p id="activityDescription"></p>
+                
+                <div class="activity-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span id="activityDuration"></span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span id="activityLocation"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="activity-actions">
+                <button id="saveActivity" class="btn btn-success">
+                    <i class="fas fa-bookmark"></i> Save Activity
+                </button>
+                <button id="generateNew" class="btn btn-primary">
+                    <i class="fas fa-sync"></i> Generate Another
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.home-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.generate-section {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.generate-form {
+    max-width: 400px;
+    margin: 2rem auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.activity-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.activity-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.activity-header h2 {
+    margin: 0;
+    color: #333;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.35em 0.65em;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1rem 0;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #666;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+#activityDescription {
+    white-space: pre-line;
+    color: #555;
+    line-height: 1.6;
+}
+
+.error-message {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateBtn = document.getElementById('generateBtn');
+    const activityResult = document.getElementById('activityResult');
+    const generateNew = document.getElementById('generateNew');
+    const saveActivity = document.getElementById('saveActivity');
+    let currentActivity = null;
+
+    function showLoading() {
+        generateBtn.disabled = true;
+        generateBtn.querySelector('.btn-text').classList.add('d-none');
+        generateBtn.querySelector('.spinner-border').classList.remove('d-none');
+    }
+
+    function hideLoading() {
+        generateBtn.disabled = false;
+        generateBtn.querySelector('.btn-text').classList.remove('d-none');
+        generateBtn.querySelector('.spinner-border').classList.add('d-none');
+    }
+
+    function showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message fade-in';
+        errorDiv.textContent = message;
+        activityResult.innerHTML = '';
+        activityResult.appendChild(errorDiv);
+        activityResult.classList.remove('d-none');
+    }
+
+    function displayActivity(activity) {
+        currentActivity = activity;
+        
+        document.getElementById('activityTitle').textContent = activity.title;
+        document.getElementById('activityDescription').textContent = activity.description;
+        document.getElementById('activityDuration').textContent = activity.duration;
+        document.getElementById('activityLocation').textContent = activity.location;
+        
+        const categoryBadge = document.getElementById('activityCategory');
+        categoryBadge.textContent = activity.category.charAt(0).toUpperCase() + activity.category.slice(1);
+        categoryBadge.className = `badge bg-${getCategoryColor(activity.category)}`;
+        
+        const difficultyBadge = document.getElementById('activityDifficulty');
+        difficultyBadge.textContent = activity.difficulty.charAt(0).toUpperCase() + activity.difficulty.slice(1);
+        difficultyBadge.className = `badge bg-${getDifficultyColor(activity.difficulty)}`;
+        
+        activityResult.classList.remove('d-none');
+        activityResult.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getCategoryColor(category) {
+        const colors = {
+            food: 'success',
+            culture: 'info',
+            adventure: 'danger'
+        };
+        return colors[category] || 'primary';
+    }
+
+    function getDifficultyColor(difficulty) {
+        const colors = {
+            easy: 'success',
+            medium: 'warning',
+            hard: 'danger'
+        };
+        return colors[difficulty] || 'primary';
+    }
+
+    generateBtn.addEventListener('click', async function() {
+        showLoading();
+        activityResult.classList.add('d-none');
+
+        const category = document.getElementById('category').value;
+        const difficulty = document.getElementById('difficulty').value;
+
+        try {
+            const response = await fetch('/generate_activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `category=${encodeURIComponent(category)}&difficulty=${encodeURIComponent(difficulty)}`
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                displayActivity(data.activity);
+            } else {
+                showError(data.error || 'Failed to generate activity. Please try again.');
+            }
+        } catch (error) {
+            showError('An error occurred while generating the activity. Please try again.');
+        } finally {
+            hideLoading();
+        }
+    });
+
+    generateNew.addEventListener('click', function() {
+        activityResult.classList.add('d-none');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    saveActivity.addEventListener('click', async function() {
+        if (!currentActivity) return;
+        
+        try {
+            const response = await fetch(`/complete_activity/${currentActivity.id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                saveActivity.disabled = true;
+                saveActivity.innerHTML = '<i class="fas fa-check"></i> Saved';
+                
+                // Update points display if it exists
+                const pointsDisplay = document.getElementById('user-points');
+                if (pointsDisplay) {
+                    pointsDisplay.textContent = data.points;
+                }
+            } else {
+                alert('Failed to save activity. Please try again.');
+            }
+        } catch (error) {
+            alert('An error occurred while saving the activity. Please try again.');
+        }
+    });
+});
+</script>
+{% endblock %}

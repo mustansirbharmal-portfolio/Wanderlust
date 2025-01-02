@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Your Local Adventure Generator{% endblock %}
+
+{% block content %}
+<div class="landing-page fade-in">
+    <div class="hero">
+        <h1>Welcome to Wanderlust</h1>
+        <p class="subtitle">Break out of your routine and discover unexpected adventures in Churchgate, Mumbai</p>
+        
+        <div class="cta-buttons">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('main.generate_activity') }}" class="btn btn-primary">Start Exploring</a>
+            {% else %}
+                <a href="{{ url_for('main.login') }}" class="btn btn-primary">Get Started</a>
+                <a href="{{ url_for('main.register') }}" class="btn btn-secondary">Create Account</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <section class="features">
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fas fa-utensils"></i>
+                <h3>Food Adventures</h3>
+                <p>Discover hidden culinary gems and local favorites</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-landmark"></i>
+                <h3>Cultural Experiences</h3>
+                <p>Explore the rich heritage and art scenes</p>
+            </div>
+            
+            <div class="feature-card">
+                <i class="fas fa-mountain"></i>
+                <h3>Urban Adventures</h3>
+                <p>Embark on exciting urban exploration quests</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <h2>How It Works</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Choose Your Category</h3>
+                <p>Select from Food, Culture, or Adventure</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Set Your Parameters</h3>
+                <p>Pick difficulty level and time commitment</p>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Get Your Adventure</h3>
+                <p>Receive AI-generated activities and start exploring</p>
+            </div>
+        </div>
+    </section>
+
+    {% if not current_user.is_authenticated %}
+    <section class="join-community">
+        <h2>Join Our Community</h2>
+        <p>Create an account to track your adventures, earn points, and unlock achievements</p>
+        <a href="{{ url_for('main.register') }}" class="btn btn-primary" style="margin-top: 5rem;">Sign Up Now</a>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.landing-page {
+    padding: 2rem 0;
+}
+
+.hero {
+    text-align: center;
+    padding: 4rem 0;
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
+                url('/static/images/mumbai-bg.jpg') center/cover;
+    color: white;
+    border-radius: 10px;
+    margin-bottom: 3rem;
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.feature-card i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.step {
+    text-align: center;
+    padding: 1.5rem;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-weight: bold;
+}
+
+.join-community {
+    text-align: center;
+    padding: 4rem 0;
+    background: var(--background-color);
+    border-radius: 10px;
+    margin-top: 3rem;
+}
+
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+    }
+    
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

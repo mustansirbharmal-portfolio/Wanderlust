@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Terms of Service{% endblock %}
+
+{% block content %}
+<div class="legal-container fade-in">
+    <h1>Terms of Service</h1>
+    
+    <section class="legal-section">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By accessing and using Wanderlust, you agree to be bound by these Terms of Service.</p>
+    </section>
+    
+    <section class="legal-section">
+        <h2>2. User Responsibilities</h2>
+        <p>Users are responsible for their own safety while participating in activities. Wanderlust is not liable for any incidents that may occur during activities.</p>
+    </section>
+    
+    <section class="legal-section">
+        <h2>3. Content Guidelines</h2>
+        <p>Users must not post inappropriate, offensive, or illegal content. Wanderlust reserves the right to remove any content that violates these guidelines.</p>
+    </section>
+    
+    <section class="legal-section">
+        <h2>4. Privacy</h2>
+        <p>Your use of Wanderlust is also governed by our <a href="{{ url_for('main.privacy') }}">Privacy Policy</a>.</p>
+    </section>
+</div>
+{% endblock %}

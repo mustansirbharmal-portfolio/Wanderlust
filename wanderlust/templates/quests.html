@@ -1,0 +1,447 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Quests{% endblock %}
+
+{% block content %}
+<div class="quests-section fade-in">
+    <div class="quests-header">
+        <h1>Available Quests</h1>
+        <p>Complete themed mini-adventures to earn special rewards!</p>
+        
+        <!-- Quest Generation Form -->
+        <div class="generate-quest-section">
+            <h3>Generate New Quest</h3>
+            <form id="generateQuestForm" class="quest-form">
+                <div class="form-group">
+                    <label for="difficulty">Difficulty:</label>
+                    <select name="difficulty" id="difficulty" class="form-control">
+                        <option value="easy">Easy (3 steps, 1-2 hours)</option>
+                        <option value="medium" selected>Medium (4 steps, 2-3 hours)</option>
+                        <option value="hard">Hard (5 steps, 3-4 hours)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Generate Quest</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="quest-filters">
+        <button class="btn btn-secondary active" data-filter="all">All Quests</button>
+        <button class="btn btn-secondary" data-filter="active">Active</button>
+        <button class="btn btn-secondary" data-filter="completed">Completed</button>
+    </div>
+
+    <div class="quests-container">
+        {% for quest in quests %}
+        <div class="quest-card" data-status="{{ 'completed' if quest.completed_at else 'active' }}">
+            <div class="quest-header">
+                <div class="quest-title-section">
+                    <h3>{{ quest.title }}</h3>
+                    <div class="quest-meta">
+                        <span class="duration"><i class="fas fa-clock"></i> {{ quest.duration }} minutes</span>
+                        <span class="points"><i class="fas fa-star"></i> {{ quest.points }} points</span>
+                    </div>
+                </div>
+                <span class="difficulty-badge {{ quest.difficulty.lower() }}">{{ quest.difficulty }}</span>
+            </div>
+            
+            <p class="quest-description">{{ quest.description }}</p>
+            
+            <div class="quest-steps">
+                <h4>Steps:</h4>
+                {% for step in quest.steps %}
+                <div class="step-item">
+                    <div class="step-number">{{ loop.index }}</div>
+                    <div class="step-content">
+                        <h5>{{ step.title }}</h5>
+                        <p>{{ step.description }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if not quest.completed_at %}
+            <button class="complete-quest-btn" data-quest-id="{{ quest.id }}">
+                Complete Quest
+            </button>
+            {% else %}
+            <div class="completion-info">
+                <i class="fas fa-check-circle"></i>
+                Completed on {{ quest.completed_at.strftime('%Y-%m-%d %H:%M') }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Loading Spinner Modal -->
+<div class="modal" id="loadingModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only">Generating quest...</span>
+                    </div>
+                </div>
+                <p class="mt-2">Generating your adventure quest...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const loadingModal = document.getElementById('loadingModal');
+    
+    // Show/Hide Modal functions
+    function showLoadingModal() {
+        loadingModal.style.display = 'block';
+        loadingModal.classList.add('show');
+    }
+    
+    function hideLoadingModal() {
+        loadingModal.style.display = 'none';
+        loadingModal.classList.remove('show');
+    }
+
+    // Filter Quests
+    const filterButtons = document.querySelectorAll('.quest-filters button');
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+            
+            // Update active button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter quest cards
+            const questCards = document.querySelectorAll('.quest-card');
+            questCards.forEach(card => {
+                if (filter === 'all' || card.dataset.status === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Generate Quest
+    const generateQuestForm = document.getElementById('generateQuestForm');
+    generateQuestForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Show loading modal
+        showLoadingModal();
+        
+        const difficulty = document.getElementById('difficulty').value;
+        
+        try {
+            const response = await fetch('/generate_quest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `difficulty=${difficulty}`
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Reload the page to show the new quest
+                window.location.reload();
+            } else {
+                alert('Error generating quest: ' + data.error);
+            }
+        } catch (error) {
+            alert('Error generating quest: ' + error.message);
+        } finally {
+            // Hide loading modal
+            hideLoadingModal();
+        }
+    });
+
+    // Complete Quest
+    const completeButtons = document.querySelectorAll('.complete-quest-btn');
+    completeButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const questId = this.dataset.questId;
+            if (confirm('Are you sure you want to mark this quest as completed?')) {
+                try {
+                    const response = await fetch(`/complete_quest/${questId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Show points earned
+                        alert(`Congratulations! You earned ${data.points_earned} points!`);
+                        // Reload the page to update the quest status
+                        window.location.reload();
+                    } else {
+                        alert('Error completing quest: ' + data.error);
+                    }
+                } catch (error) {
+                    alert('Error completing quest: ' + error.message);
+                }
+            }
+        });
+    });
+});
+</script>
+
+<style>
+.quests-section {
+    padding: 2rem;
+}
+
+.quests-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.generate-quest-section {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quest-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.quest-filters {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.quests-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.quest-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quest-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.quest-title-section h3 {
+    margin: 0;
+    font-size: 24px;
+    color: #2d3748;
+    margin-bottom: 8px;
+}
+
+.quest-meta {
+    display: flex;
+    gap: 16px;
+    color: #718096;
+    font-size: 14px;
+}
+
+.difficulty-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.difficulty-badge.easy {
+    background: #E6FFFA;
+    color: #2C7A7B;
+}
+
+.difficulty-badge.medium {
+    background: #FEFCBF;
+    color: #975A16;
+}
+
+.difficulty-badge.hard {
+    background: #FED7D7;
+    color: #C53030;
+}
+
+.quest-description {
+    color: #4A5568;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.quest-steps {
+    margin-bottom: 24px;
+}
+
+.quest-steps h4 {
+    color: #2D3748;
+    margin-bottom: 16px;
+    font-size: 18px;
+}
+
+.step-item {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #F7FAFC;
+    border-radius: 8px;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    background: #4299E1;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-content h5 {
+    margin: 0 0 8px 0;
+    color: #2D3748;
+    font-size: 16px;
+}
+
+.step-content p {
+    margin: 0;
+    color: #4A5568;
+    line-height: 1.5;
+}
+
+.complete-quest-btn {
+    width: 100%;
+    padding: 12px;
+    background: #4299E1;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.complete-quest-btn:hover {
+    background: #2B6CB0;
+}
+
+.completion-info {
+    text-align: center;
+    color: #48BB78;
+    font-size: 14px;
+    padding: 12px;
+    background: #F0FFF4;
+    border-radius: 6px;
+}
+
+.completion-info i {
+    margin-right: 8px;
+}
+
+@keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fade-in 0.5s ease-out;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+}
+
+.modal.show {
+    display: block;
+}
+
+.modal-dialog {
+    position: relative;
+    width: auto;
+    margin: 0.5rem;
+    pointer-events: none;
+    transform: translate(0, 50%);
+}
+
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+    background-color: #fff;
+    border-radius: 0.3rem;
+    outline: 0;
+}
+
+.modal-body {
+    position: relative;
+    flex: 1 1 auto;
+    padding: 1rem;
+}
+
+.spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.spinner-border {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}

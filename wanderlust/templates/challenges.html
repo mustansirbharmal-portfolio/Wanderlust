@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Wanderlust - Challenges{% endblock %}
+
+{% block content %}
+<div class="challenges-section fade-in">
+    <div class="challenges-header">
+        <h1>Daily Challenges</h1>
+        <p>Complete time-limited challenges to earn bonus points and special achievements!</p>
+        <div class="generate-challenge-section">
+            <select class="challenge-difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <button class="btn btn-primary generate-challenge">Generate New Challenge</button>
+        </div>
+    </div>
+
+    <div class="active-challenges">
+        <h2>Active Challenges</h2>
+        <div class="challenges-grid">
+            {% for challenge in active_challenges %}
+            <div class="card challenge-card">
+                <div class="challenge-header">
+                    <h3>{{ challenge.title }}</h3>
+                    <div class="challenge-timer" data-end-time="{{ (challenge.created_at + timedelta(minutes=challenge.time_limit)).isoformat() }}">
+                        <i class="fas fa-clock"></i>
+                        <span class="time-remaining"></span>
+                    </div>
+                </div>
+
+                <p class="challenge-description">{{ challenge.description }}</p>
+
+                <div class="challenge-progress">
+                    <div class="progress-bar">
+                        <div class="progress" style="width: {{ (challenge.activities|selectattr('completed')|list|length / challenge.activities|length) * 100 }}%"></div>
+                    </div>
+                    <span class="progress-text">{{ challenge.activities|selectattr('completed')|list|length }}/{{ challenge.activities|length }} completed</span>
+                </div>
+
+                <div class="challenge-activities">
+                    {% for activity in challenge.activities %}
+                    <div class="activity-item {% if activity.completed %}completed{% endif %}">
+                        <i class="fas {% if activity.completed %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                        <span>{{ activity.description }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="challenge-reward">
+                    <i class="fas fa-star"></i>
+                    <span>Reward: {{ challenge.points_reward }} points</span>
+                </div>
+
+                {% if challenge.activities|selectattr('completed')|list|length == challenge.activities|length %}
+                <button class="btn btn-primary complete-challenge" data-challenge-id="{{ challenge.id }}">Complete Challenge</button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="completed-challenges">
+        <h2>Completed Challenges</h2>
+        <div class="challenges-grid">
+            {% for challenge in completed_challenges %}
+            <div class="card challenge-card completed">
+                <div class="challenge-header">
+                    <h3>{{ challenge.title }}</h3>
+                    <div class="completion-badge">
+                        <i class="fas fa-trophy"></i>
+                        <span>Completed</span>
+                    </div>
+                </div>
+
+                <p class="challenge-description">{{ challenge.description }}</p>
+
+                <div class="challenge-activities">
+                    {% for activity in challenge.activities %}
+                    <div class="activity-item completed">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ activity.description }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="challenge-completion">
+                    <span class="completion-date">Completed on {{ challenge.completed_at.strftime('%B %d, %Y') }}</span>
+                    <span class="points-earned">+{{ challenge.points_reward }} points earned</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/challenges.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update challenge timers
+    const challengeTimers = document.querySelectorAll('.challenge-timer');
+    
+    function updateTimers() {
+        challengeTimers.forEach(timer => {
+            const endTime = new Date(timer.dataset.endTime).getTime();
+            const now = new Date().getTime();
+            const timeLeft = endTime - now;
+
+            if (timeLeft > 0) {
+                const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                timer.querySelector('.time-remaining').textContent = `${hours}h ${minutes}m remaining`;
+            } else {
+                timer.querySelector('.time-remaining').textContent = 'Challenge ended';
+                timer.closest('.challenge-card').classList.add('expired');
+            }
+        });
+    }
+
+    // Update timers every minute
+    updateTimers();
+    setInterval(updateTimers, 60000);
+
+    // Handle challenge completion
+    const completeButtons = document.querySelectorAll('.complete-challenge');
+    completeButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const challengeId = this.dataset.challengeId;
+            try {
+                const response = await fetch(`/complete_challenge/${challengeId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    // Update points display if it exists
+                    const pointsDisplay = document.getElementById('user-points');
+                    if (pointsDisplay) {
+                        pointsDisplay.textContent = result.points;
+                    }
+                    // Reload the page to show updated challenges
+                    window.location.reload();
+                } else {
+                    console.error('Failed to complete challenge');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+
+    // Handle generate new challenge
+    const generateButton = document.querySelector('.generate-challenge');
+    generateButton.addEventListener('click', async function() {
+        const difficulty = document.querySelector('.challenge-difficulty').value;
+        try {
+            const response = await fetch(`/generate_challenge/${difficulty}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (response.ok) {
+                // Reload the page to show new challenge
+                window.location.reload();
+            } else {
+                console.error('Failed to generate challenge');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
