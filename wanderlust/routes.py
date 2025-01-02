@@ -242,7 +242,7 @@ def create_challenge():
         prompt = generate_challenge_prompt(difficulty)
         
         # Call OpenRouter API directly
-        OPENROUTER_API_KEY = "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"
+        OPENROUTER_API_KEY = "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"
         
         headers = {
             'Authorization': f'Bearer {OPENROUTER_API_KEY}',
@@ -515,7 +515,7 @@ def generate_activity():
         prompt = generate_activity_prompt(category, difficulty)
         
         # Call OpenRouter API directly (no OpenAI client needed)
-        OPENROUTER_API_KEY = "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"  # Replace with your actual OpenRouter API key
+        OPENROUTER_API_KEY = "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"  # Replace with your actual OpenRouter API key
         
         headers = {
             'Authorization': f'Bearer {OPENROUTER_API_KEY}',
@@ -801,7 +801,7 @@ def generate_quest():
         prompt = generate_quest_prompt(difficulty)
         
         # Call OpenRouter API directly (no OpenAI client needed)
-        OPENROUTER_API_KEY = "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"
+        OPENROUTER_API_KEY = "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"
         
         headers = {
             'Authorization': f'Bearer {OPENROUTER_API_KEY}',
@@ -1037,7 +1037,7 @@ def generate_challenge():
         prompt = generate_challenge_prompt(difficulty)
         
         # Call OpenRouter API directly
-        OPENROUTER_API_KEY = "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"
+        OPENROUTER_API_KEY = "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"
         
         headers = {
             'Authorization': f'Bearer {OPENROUTER_API_KEY}',
